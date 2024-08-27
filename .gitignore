@@ -1,0 +1,50 @@
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below if you use dep)
+#vendor/
+
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
+*.so
+
+# Go packages directory
+# This is where Go package dependencies are installed.
+# It is recommended to keep this directory in source control.
+# Comment this out if you plan to use modules instead of GOPATH.
+#vendor/
+
+# Uncomment the following line if you're not using modules
+# and you need to ignore versioned dependencies.
+# /vendor/
+
+# IDE directories
+.idea/
+.vscode/
+
+# macOS directory attributes
+.DS_Store
+
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# Build directory
+/build/
+
+# Binary executable
+myapp
+
+# Log files
+*.log
+
+# .env file
+.env
