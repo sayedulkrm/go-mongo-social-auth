@@ -6,6 +6,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
+	"github.com/sayedulkrm/go-mongo-social-auth/config"
 	"github.com/sayedulkrm/go-mongo-social-auth/lib"
 	"github.com/sayedulkrm/go-mongo-social-auth/middlewares"
 	"github.com/sayedulkrm/go-mongo-social-auth/routes"
@@ -45,6 +46,9 @@ func startServer(handler http.Handler) {
 	if err != nil {
 		logrus.Fatalf("Error loading .env file")
 	}
+
+	// Db Connect
+	config.DBInstance()
 
 	port := os.Getenv("PORT")
 
