@@ -3,6 +3,7 @@ package routes
 import (
 	"net/http"
 
+	"github.com/sayedulkrm/go-mongo-social-auth/helpers"
 	"github.com/sayedulkrm/go-mongo-social-auth/middlewares"
 	"github.com/sayedulkrm/go-mongo-social-auth/utils"
 )
@@ -10,6 +11,8 @@ import (
 func SetupRoutes() http.Handler {
 
 	rootRoutes := http.NewServeMux()
+	// Providing socail auth helper
+	helpers.SocialAuthHelper()
 
 	// Set up user routes
 	userRoutes := UserRoutes()

@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/markbates/goth/gothic"
 	"github.com/sayedulkrm/go-mongo-social-auth/config"
-	"github.com/sayedulkrm/go-mongo-social-auth/helpers"
 )
 
 var userCollection = config.OpenCollection(config.CreatedMongoClient, "user")
@@ -44,54 +42,52 @@ func GetProviderFromContext(r *http.Request) string {
 
 func GetGoogleAuthCallbackFunc(w http.ResponseWriter, r *http.Request) {
 
-	helpers.SocialAuthHelper()
+	// helpers.SocialAuthHelper()
 
-	// We have to check if we are geting {provider} from params
+	// We have to check if we are getting {provider} from the path
+	// value := r.URL.Path
+	// fmt.Println("value", value)
 
-	value := r.PathValue("provider")
-	fmt.Println("value", value)
+	// // Extract the provider from the URL path
+	// pathSegments := strings.Split(r.URL.Path, "/")
+	// if len(pathSegments) < 4 {
+	// 	http.Error(w, "Invalid request", http.StatusBadRequest)
+	// 	return
+	// }
+	// provider := pathSegments[2] // Extracting 'google' from '/auth/google/callback'
 
-	// Extract the provider from the URL path
-	pathSegments := strings.Split(r.URL.Path, "/")
-	if len(pathSegments) < 4 {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
-		return
-	}
-	provider := pathSegments[2] // Extracting 'google' from '/auth/google/callback'
+	// // Log the extracted provider
+	// fmt.Println("provider", provider)
 
-	fmt.Println("provider", provider)
+	// // Add provider as a query parameter (this is what `gothic.CompleteUserAuth` expects)
+	// q := r.URL.Query()
+	// q.Add("provider", provider)
+	// r.URL.RawQuery = q.Encode()
 
-	// // Set provider in request context
-	// r = SetProviderInContext(r, provider)
-
-	// // Check if the provider is correctly set
-	// fmt.Println("provider", GetProviderFromContext(r))
-
-	// get the user from the session
-
+	// Complete the authentication process
 	user, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
 		fmt.Fprintln(w, err)
 		return
 	}
 
+	// Log the authenticated user
 	fmt.Println(user)
 
-	// redirect the user
+	// Redirect the user after authentication
 	http.Redirect(w, r, "http://localhost:3000", http.StatusFound)
-
 }
 
-// func HandleProviderLogin(w http.ResponseWriter, r *http.Request) {
+func HandleProviderLogin(w http.ResponseWriter, r *http.Request) {
+	// // Extract the provider (e.g., "google")
 
-// 	// get the provider from the request
+	provider := r.PathValue("provider") // Extracting 'google' from '/auth/google'
 
-// 	provider := r.PathValue("provider")
+	// Add provider as a query parameter
+	q := r.URL.Query()
+	q.Add("provider", provider)
+	r.URL.RawQuery = q.Encode()
 
-// 	fmt.Println("provider", provider)
-
-// 	// redirect the user to the provider's login page
-
-// 	gothic.BeginAuthHandler(w, r)
-
-// }
+	// Begin the authentication process
+	gothic.BeginAuthHandler(w, r)
+}

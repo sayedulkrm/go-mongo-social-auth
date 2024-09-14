@@ -16,7 +16,7 @@ func UserRoutes() *http.ServeMux {
 
 	// Social Auth
 	router.HandleFunc("GET /auth/{provider}/callback", controllers.GetGoogleAuthCallbackFunc)
-	// router.HandleFunc("GET /auth/{provider}", controllers.HandleProviderLogin)
+	router.HandleFunc("GET /auth/{provider}", controllers.HandleProviderLogin)
 
 	router.HandleFunc("/", middlewares.LogMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		panic(utils.NewErrorHandler("Path Not Found", http.StatusBadRequest))

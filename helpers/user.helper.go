@@ -30,8 +30,6 @@ func SocialAuthHelper() {
 	googleClientId := os.Getenv("GOOGLE_CLIENT_ID")
 	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
 
-	// Have to use store- dont know why
-
 	sessionSecret := os.Getenv("SESSION_SECRET")
 
 	key := sessionSecret // Replace with your SESSION_SECRET or similar
