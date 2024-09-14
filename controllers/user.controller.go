@@ -40,43 +40,7 @@ func GetProviderFromContext(r *http.Request) string {
 	return provider
 }
 
-func GetGoogleAuthCallbackFunc(w http.ResponseWriter, r *http.Request) {
-
-	// helpers.SocialAuthHelper()
-
-	// We have to check if we are getting {provider} from the path
-	// value := r.URL.Path
-	// fmt.Println("value", value)
-
-	// // Extract the provider from the URL path
-	// pathSegments := strings.Split(r.URL.Path, "/")
-	// if len(pathSegments) < 4 {
-	// 	http.Error(w, "Invalid request", http.StatusBadRequest)
-	// 	return
-	// }
-	// provider := pathSegments[2] // Extracting 'google' from '/auth/google/callback'
-
-	// // Log the extracted provider
-	// fmt.Println("provider", provider)
-
-	// // Add provider as a query parameter (this is what `gothic.CompleteUserAuth` expects)
-	// q := r.URL.Query()
-	// q.Add("provider", provider)
-	// r.URL.RawQuery = q.Encode()
-
-	// Complete the authentication process
-	user, err := gothic.CompleteUserAuth(w, r)
-	if err != nil {
-		fmt.Fprintln(w, err)
-		return
-	}
-
-	// Log the authenticated user
-	fmt.Println(user)
-
-	// Redirect the user after authentication
-	http.Redirect(w, r, "http://localhost:3000", http.StatusFound)
-}
+// Social Auth
 
 func HandleProviderLogin(w http.ResponseWriter, r *http.Request) {
 	// // Extract the provider (e.g., "google")
@@ -90,4 +54,25 @@ func HandleProviderLogin(w http.ResponseWriter, r *http.Request) {
 
 	// Begin the authentication process
 	gothic.BeginAuthHandler(w, r)
+}
+
+func GetGoogleAuthCallbackFunc(w http.ResponseWriter, r *http.Request) {
+
+	// Complete the authentication process
+	user, err := gothic.CompleteUserAuth(w, r)
+	if err != nil {
+		fmt.Fprintln(w, err)
+		return
+	}
+
+	// Log the authenticated user
+	fmt.Println(user.Name)
+	fmt.Println(user.Email)
+	fmt.Println(user.AvatarURL)
+	fmt.Println(user.FirstName)
+	fmt.Println(user.LastName)
+	fmt.Println(user.NickName)
+
+	// Redirect the user after authentication
+	http.Redirect(w, r, "http://localhost:3000", http.StatusFound)
 }

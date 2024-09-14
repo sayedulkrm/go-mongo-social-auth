@@ -47,6 +47,6 @@ func SocialAuthHelper() {
 	// Callback URL has to be exact same in Google cloud console
 
 	goth.UseProviders(
-		google.New(googleClientId, googleClientSecret, "http://localhost:8000/api/v1/auth/google/callback"),
+		google.New(googleClientId, googleClientSecret, "http://localhost:8000/api/v1/auth/google/callback", "profile", "email"),
 	)
 }
