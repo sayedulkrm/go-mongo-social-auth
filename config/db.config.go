@@ -6,12 +6,20 @@ import (
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func DBInstance() *mongo.Client {
+
+	// Start Server
+	err := godotenv.Load(".env")
+
+	if err != nil {
+		logrus.Fatalf("Error loading .env file")
+	}
 
 	MONGODB_URL := os.Getenv("MONGODB_URL")
 
@@ -29,6 +37,8 @@ func DBInstance() *mongo.Client {
 	return mongoClient
 
 }
+
+var CreatedMongoClient = DBInstance()
 
 func OpenCollection(client *mongo.Client, collectionName string) *mongo.Collection {
 	return client.Database("go-social-auth").Collection(collectionName)

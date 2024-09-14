@@ -6,7 +6,6 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
-	"github.com/sayedulkrm/go-mongo-social-auth/config"
 	"github.com/sayedulkrm/go-mongo-social-auth/lib"
 	"github.com/sayedulkrm/go-mongo-social-auth/middlewares"
 	"github.com/sayedulkrm/go-mongo-social-auth/routes"
@@ -27,7 +26,6 @@ func main() {
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
 		// Debug:            true,
-
 	}
 
 	cors := cors.New(corsOptions)
@@ -48,7 +46,7 @@ func startServer(handler http.Handler) {
 	}
 
 	// Db Connect
-	config.DBInstance()
+	// config.DBInstance()
 
 	port := os.Getenv("PORT")
 

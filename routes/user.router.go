@@ -3,6 +3,7 @@ package routes
 import (
 	"net/http"
 
+	"github.com/sayedulkrm/go-mongo-social-auth/controllers"
 	"github.com/sayedulkrm/go-mongo-social-auth/middlewares"
 	"github.com/sayedulkrm/go-mongo-social-auth/utils"
 )
@@ -11,13 +12,11 @@ func UserRoutes() *http.ServeMux {
 
 	router := http.NewServeMux()
 
-	router.HandleFunc("GET /register", func(w http.ResponseWriter, r *http.Request) {
+	// router.HandleFunc("POST /register", controllers.UserRegister)
 
-		w.Header().Set("Content-Type", "text/html")
-		html := `<h1>Register. To See Frontend <a href="http://localhost:3000"> Click Here </a></h1>`
-		w.Write([]byte(html))
-
-	})
+	// Social Auth
+	router.HandleFunc("GET /auth/{provider}/callback", controllers.GetGoogleAuthCallbackFunc)
+	// router.HandleFunc("GET /auth/{provider}", controllers.HandleProviderLogin)
 
 	router.HandleFunc("/", middlewares.LogMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		panic(utils.NewErrorHandler("Path Not Found", http.StatusBadRequest))
