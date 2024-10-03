@@ -11,12 +11,16 @@ import (
 func UserRoutes() *http.ServeMux {
 
 	router := http.NewServeMux()
-
-	// router.HandleFunc("POST /register", controllers.UserRegister)
+	// Auth
+	router.HandleFunc("POST /register", controllers.UserRegister)
+	router.HandleFunc("POST /login", controllers.UserLogin)
 
 	// Social Auth
-	router.HandleFunc("GET /auth/{provider}/callback", controllers.GetGoogleAuthCallbackFunc)
 	router.HandleFunc("GET /auth/{provider}", controllers.HandleProviderLogin)
+	router.HandleFunc("GET /auth/{provider}/callback", controllers.GetGoogleAuthCallbackFunc)
+
+	// Authienticated Routes
+	router.HandleFunc("GET /me", controllers.GetUserProfile)
 
 	router.HandleFunc("/", middlewares.LogMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		panic(utils.NewErrorHandler("Path Not Found", http.StatusBadRequest))

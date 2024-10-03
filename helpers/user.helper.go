@@ -15,9 +15,11 @@ import (
 
 var validate = validator.New()
 
-// func VerifyPassword()
+func VerifyPassword()
 
-// func HashPassword()
+func HashPassword()
+
+// Social auth
 
 func SocialAuthHelper() {
 	err := godotenv.Load()
@@ -47,6 +49,6 @@ func SocialAuthHelper() {
 	// Callback URL has to be exact same in Google cloud console
 
 	goth.UseProviders(
-		google.New(googleClientId, googleClientSecret, "http://localhost:8000/api/v1/auth/google/callback", "profile", "email"),
+		google.New(googleClientId, googleClientSecret, "http://localhost:8000/api/v1/user/auth/google/callback", "profile", "email"),
 	)
 }

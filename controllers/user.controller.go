@@ -1,15 +1,11 @@
 package controllers
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/markbates/goth/gothic"
-	"github.com/sayedulkrm/go-mongo-social-auth/config"
 )
-
-var userCollection = config.OpenCollection(config.CreatedMongoClient, "user")
 
 func UserRegister(w http.ResponseWriter, r *http.Request) {
 	// return func(w http.ResponseWriter, r *http.Request) {
@@ -17,30 +13,29 @@ func UserRegister(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	w.Write([]byte("User registration logic goes here"))
+
 }
 
-// func UserLogin()
+func UserLogin(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("User login logic goes here"))
 
-type key int
-
-const ProviderKey key = 0
-
-// Middleware to set provider into context
-func SetProviderInContext(r *http.Request, provider string) *http.Request {
-	ctx := context.WithValue(r.Context(), ProviderKey, provider)
-	return r.WithContext(ctx)
 }
 
-// Extract provider from context
-func GetProviderFromContext(r *http.Request) string {
-	provider, ok := r.Context().Value(ProviderKey).(string)
-	if !ok {
-		return ""
-	}
-	return provider
+// logout
+func UserLogout(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("User logout logic goes here"))
 }
 
-// Social Auth
+// =================== 		Profile  	==============
+
+// Get user profile
+func GetUserProfile(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Get user profile logic goes here"))
+}
+
+// Update user profile http.ResponseWriter, r *http.Request
+
+// =================== 		Social Auth  	==============
 
 func HandleProviderLogin(w http.ResponseWriter, r *http.Request) {
 	// // Extract the provider (e.g., "google")
@@ -76,3 +71,5 @@ func GetGoogleAuthCallbackFunc(w http.ResponseWriter, r *http.Request) {
 	// Redirect the user after authentication
 	http.Redirect(w, r, "http://localhost:3000", http.StatusFound)
 }
+
+// ========================
