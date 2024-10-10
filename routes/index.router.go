@@ -20,8 +20,8 @@ func SetupRoutes() http.Handler {
 	adminRoutes := AdminRoutes()
 
 	// Set up admin routes
-	rootRoutes.Handle("/api/v1/", middlewares.LogMiddleware(http.StripPrefix("/api/v1/user", userRoutes).(http.HandlerFunc)))
-	rootRoutes.Handle("/api/v1/", middlewares.LogMiddleware(http.StripPrefix("/api/v1/admin", adminRoutes).(http.HandlerFunc)))
+	rootRoutes.Handle("/api/v1/user/", middlewares.LogMiddleware(http.StripPrefix("/api/v1/user", userRoutes).(http.HandlerFunc)))
+	rootRoutes.Handle("/api/v1/admin/", middlewares.LogMiddleware(http.StripPrefix("/api/v1/admin", adminRoutes).(http.HandlerFunc)))
 
 	rootRoutes.HandleFunc("/", middlewares.LogMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		panic(utils.NewErrorHandler("Path Not Found", http.StatusBadRequest))

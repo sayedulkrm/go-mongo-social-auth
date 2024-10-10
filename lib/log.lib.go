@@ -6,12 +6,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-
-func ConfigureLogger(){
-
+func ConfigureLogger() {
 
 	logger := &logrus.Logger{
-		Out: os.Stderr,
+		Out:   os.Stderr,
 		Level: logrus.DebugLevel,
 		Formatter: &logrus.TextFormatter{
 			TimestampFormat: "2006-01-02 15:04:05",
@@ -21,9 +19,10 @@ func ConfigureLogger(){
 		},
 	}
 
-		// Set the logrus logger as the default logger for Logrus
-		logrus.SetFormatter(logger.Formatter)
-		logrus.SetOutput(logger.Out)
-		logrus.SetLevel(logger.Level)
+	// Set the logrus logger as the default logger for Logrus
+	logrus.SetFormatter(logger.Formatter)
+	logrus.SetOutput(logger.Out)
+	logrus.SetLevel(logger.Level)
+	logrus.SetLevel(logrus.DebugLevel)
 
 }

@@ -14,6 +14,13 @@ import (
 
 func main() {
 
+	// Start Server
+	err := godotenv.Load(".env")
+
+	if err != nil {
+		logrus.Fatalf("Error loading .env file")
+	}
+
 	// Configure Logger
 	lib.ConfigureLogger()
 
@@ -38,12 +45,6 @@ func main() {
 }
 
 func startServer(handler http.Handler) {
-	// Start Server
-	err := godotenv.Load(".env")
-
-	if err != nil {
-		logrus.Fatalf("Error loading .env file")
-	}
 
 	// Db Connect
 	// config.DBInstance()

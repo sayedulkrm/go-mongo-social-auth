@@ -13,6 +13,7 @@ func UserRoutes() *http.ServeMux {
 	router := http.NewServeMux()
 	// Auth
 	router.HandleFunc("POST /register", controllers.UserRegister)
+	router.HandleFunc("POST /activate", controllers.ActivateUser)
 	router.HandleFunc("POST /login", controllers.UserLogin)
 
 	// Social Auth
