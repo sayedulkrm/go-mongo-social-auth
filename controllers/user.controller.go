@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/sayedulkrm/go-mongo-social-auth/config"
 	"github.com/sayedulkrm/go-mongo-social-auth/helpers"
@@ -306,10 +307,9 @@ func HandleProviderLogin(w http.ResponseWriter, r *http.Request) {
 
 func GetGoogleAuthCallbackFunc(w http.ResponseWriter, r *http.Request) {
 
-	// Complete the authentication process
 	user, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
-		fmt.Fprintln(w, err)
+		http.Error(w, "Failed to authenticate user", http.StatusBadRequest)
 		return
 	}
 
@@ -320,6 +320,20 @@ func GetGoogleAuthCallbackFunc(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(user.FirstName)
 	fmt.Println(user.LastName)
 	fmt.Println(user.NickName)
+
+	// Log the authenticated user for debugging
+
+	// Retrieve the session and store the user
+	session, err := gothic.Store.Get(r, "googlelogin")
+	if err != nil {
+		http.Error(w, "Failed to get session", http.StatusInternalServerError)
+		return
+	}
+
+	logrus.Info("Entering GetGoogleAuthCallbackFunc Sesson", session)
+
+	// Redirect to the success route
+	// http.Redirect(w, r, "/api/v1/user/google/login/success", http.StatusSeeOther)
 
 	ctx, cancle := context.WithTimeout(context.Background(), 100*time.Second)
 
@@ -334,6 +348,7 @@ func GetGoogleAuthCallbackFunc(w http.ResponseWriter, r *http.Request) {
 
 	if err == nil {
 		utils.SendToken(existingUser, 200, "Welcome", w, r)
+		// utils.SendTokenAndRedirect(existingUser, w, r)
 		return
 	}
 
@@ -366,8 +381,65 @@ func GetGoogleAuthCallbackFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Send token to the new user
+	// Set tokens in cookies and redirect to the main page
+	// utils.SendTokenAndRedirect(newUser, w, r)
+	// // Send token to the new user
 	utils.SendToken(newUser, 201, fmt.Sprintf("Account created successfully. Welcome, %s!", newUser.FirstName), w, r)
+
+}
+
+func CreateUserFromSocalAuth(w http.ResponseWriter, r *http.Request) {
+
+	logrus.Info("Am getting Called =====>")
+
+	// Retrieve the session
+	session, err := gothic.Store.Get(r, "gothic-session")
+	if err != nil {
+		http.Error(w, "Failed to retrieve session", http.StatusInternalServerError)
+		return
+	}
+	logrus.Info(" Sesson log :", session)
+
+	// Get user data from the session
+	user, ok := session.Values["user"].(goth.User)
+	if !ok {
+		http.Error(w, "No user found in session", http.StatusUnauthorized)
+		return
+	}
+
+	// At this point, you have the user data, proceed with token generation or user creation
+	logrus.Info("User from session:", user)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+
+	var existingUser models.USER
+	err = config.UserCollection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&existingUser)
+
+	if err == nil {
+		// If user exists, set tokens and redirect
+		utils.SendToken(existingUser, 201, fmt.Sprintf("Account created successfully. Welcome, %s!", existingUser.FirstName), w, r)
+	} else {
+		// If user does not exist, create a new user and redirect
+		newUser := models.USER{
+			UserName:  user.NickName,
+			Email:     user.Email,
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
+			UserImage: models.UserImage{
+				PublicID: "",
+				URL:      user.AvatarURL,
+			},
+		}
+
+		_, err = config.UserCollection.InsertOne(ctx, newUser)
+		if err != nil {
+			http.Error(w, "Failed to create user", http.StatusBadRequest)
+			return
+		}
+		// Set tokens and redirect to main page
+		utils.SendToken(newUser, 201, fmt.Sprintf("Account created successfully. Welcome, %s!", newUser.FirstName), w, r)
+	}
 
 }
 

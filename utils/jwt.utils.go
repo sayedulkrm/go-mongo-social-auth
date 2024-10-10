@@ -121,3 +121,49 @@ func SendToken(user models.USER, statusCode int, message string, w http.Response
 	})
 
 }
+
+// Forsical auth
+func SendTokenAndRedirect(user models.USER, w http.ResponseWriter, r *http.Request) {
+
+	accessToken, err := SignAccessToken()
+	if err != nil {
+		logrus.Error("Failed To Generate Access Token")
+		http.Error(w, "Failed to generate access token", http.StatusBadRequest)
+		return
+	}
+
+	refreshToken, err := SignRefreshToken()
+	if err != nil {
+		logrus.Error("Failed To Generate Refresh Token")
+		http.Error(w, "Failed to generate refresh token", http.StatusBadRequest)
+		return
+	}
+
+	// Create cookies for the tokens
+	accessTokenCookie := &http.Cookie{
+		Name:     "access_token",
+		Value:    accessToken,
+		Expires:  time.Now().Add(time.Minute * time.Duration(accessTokenExpire)),
+		MaxAge:   accessTokenExpire * 60,
+		HttpOnly: true,
+		Secure:   true, // Set to true in production
+		SameSite: http.SameSiteNoneMode,
+	}
+
+	refreshTokenCookie := &http.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Expires:  time.Now().Add(time.Hour * 24 * time.Duration(refreshTokenExpire)),
+		MaxAge:   refreshTokenExpire * 60 * 60 * 24,
+		HttpOnly: true,
+		Secure:   true, // Set to true in production
+		SameSite: http.SameSiteNoneMode,
+	}
+
+	// Set the cookies
+	http.SetCookie(w, accessTokenCookie)
+	http.SetCookie(w, refreshTokenCookie)
+
+	// Redirect to the main page (frontend)
+	http.Redirect(w, r, "http://localhost:3000/", http.StatusSeeOther)
+}

@@ -180,18 +180,16 @@ func SocialAuthHelper() {
 	googleClientId := os.Getenv("GOOGLE_CLIENT_ID")
 	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
 
-	sessionSecret := os.Getenv("SESSION_SECRET")
-
-	key := sessionSecret // Replace with your SESSION_SECRET or similar
-	maxAge := 86400 * 30 // 30 days
-	isProd := false      // Set to true when serving over https
+	key := os.Getenv("SESSION_SECRET")
+	if key == "" {
+		logrus.Fatal("SESSION_SECRET is not set in the environment")
+	}
 
 	store := sessions.NewCookieStore([]byte(key))
-	store.MaxAge(maxAge)
-	store.Options.Path = "/"
-	store.Options.HttpOnly = true // HttpOnly should always be enabled
-	store.Options.Secure = isProd
-
+	store.MaxAge(86400 * 30)      // 30 days
+	store.Options.HttpOnly = true // HttpOnly should be enabled for security
+	store.Options.Secure = true   // Ensure this is false in development (set to true in production)
+	// Required if you are dealing with cross-domain issues
 	gothic.Store = store
 
 	// Callback URL has to be exact same in Google cloud console
