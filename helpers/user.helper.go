@@ -186,10 +186,12 @@ func SocialAuthHelper() {
 	}
 
 	store := sessions.NewCookieStore([]byte(key))
+	// store.Options.Domain = "http://localhost:3000"
 	store.MaxAge(86400 * 30)      // 30 days
 	store.Options.HttpOnly = true // HttpOnly should be enabled for security
 	store.Options.Secure = true   // Ensure this is false in development (set to true in production)
 	// Required if you are dealing with cross-domain issues
+
 	gothic.Store = store
 
 	// Callback URL has to be exact same in Google cloud console

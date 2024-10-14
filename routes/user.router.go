@@ -19,6 +19,7 @@ func UserRoutes() *http.ServeMux {
 	// Social Auth
 	router.HandleFunc("GET /auth/{provider}", controllers.HandleProviderLogin)
 	router.HandleFunc("GET /auth/{provider}/callback", controllers.GetGoogleAuthCallbackFunc)
+	// From frontend We need to call it continuosly. To get user from sesson
 	router.HandleFunc("GET /google/login/success", controllers.CreateUserFromSocalAuth)
 
 	// Authienticated Routes

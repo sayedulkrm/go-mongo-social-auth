@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/sayedulkrm/go-mongo-social-auth/config"
 	"github.com/sayedulkrm/go-mongo-social-auth/helpers"
@@ -18,6 +17,7 @@ import (
 	"github.com/sayedulkrm/go-mongo-social-auth/utils"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var validate = validator.New()
@@ -304,9 +304,7 @@ func HandleProviderLogin(w http.ResponseWriter, r *http.Request) {
 	// Begin the authentication process
 	gothic.BeginAuthHandler(w, r)
 }
-
 func GetGoogleAuthCallbackFunc(w http.ResponseWriter, r *http.Request) {
-
 	user, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
 		http.Error(w, "Failed to authenticate user", http.StatusBadRequest)
@@ -314,122 +312,75 @@ func GetGoogleAuthCallbackFunc(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Log the authenticated user
-	fmt.Println(user.Name)
-	fmt.Println(user.Email)
-	fmt.Println(user.AvatarURL)
-	fmt.Println(user.FirstName)
-	fmt.Println(user.LastName)
-	fmt.Println(user.NickName)
+	logrus.Infof("Authenticated user: %s, %s, %s", user.FirstName, user.LastName, user.Email)
 
-	// Log the authenticated user for debugging
-
-	// Retrieve the session and store the user
-	session, err := gothic.Store.Get(r, "googlelogin")
+	// Retrieve the session and store minimal user profile data
+	session, err := gothic.Store.Get(r, "gothic-session")
 	if err != nil {
 		http.Error(w, "Failed to get session", http.StatusInternalServerError)
 		return
 	}
 
-	logrus.Info("Entering GetGoogleAuthCallbackFunc Sesson", session)
+	// Store necessary user profile data in the session
+	session.Values["user_email"] = user.Email
+	session.Values["user_first_name"] = user.FirstName
+	session.Values["user_last_name"] = user.LastName
+	session.Values["user_name"] = user.Name
+	session.Values["user_avatar"] = user.AvatarURL
 
-	// Redirect to the success route
-	// http.Redirect(w, r, "/api/v1/user/google/login/success", http.StatusSeeOther)
-
-	ctx, cancle := context.WithTimeout(context.Background(), 100*time.Second)
-
-	defer cancle()
-	// Find the user by email
-	var existingUser models.USER
-
-	err = config.UserCollection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&existingUser)
-
-	// 	If the user is found, the FindOne function will decode the result into existingUser, and err will be nil.
-	// If no user is found, err will be set to mongo.ErrNoDocuments, and you should allow the code to proceed, as this means the username does not already exist.
-
-	if err == nil {
-		utils.SendToken(existingUser, 200, "Welcome", w, r)
-		// utils.SendTokenAndRedirect(existingUser, w, r)
-		return
-	}
-
-	// If the user does not exist, create a new username by combining first and last names
-	firstName := user.FirstName
-	lastName := user.LastName
-
-	uniqueUsername, err := helpers.EnsureUniqueUsername(ctx, firstName, lastName)
+	// Save the session
+	err = session.Save(r, w)
 	if err != nil {
-		utils.ErrorResponse(w, r, http.StatusInternalServerError, "Failed to ensure unique username")
+		logrus.Errorf("Failed to save session: %v", err)
+		http.Error(w, "Failed to save session", http.StatusInternalServerError)
 		return
 	}
 
-	// Create a new user with the unique username and other details
-	newUser := models.USER{
-		UserName:  uniqueUsername,
-		Email:     user.Email,
-		FirstName: firstName,
-		LastName:  lastName,
-		UserImage: models.UserImage{
-			URL: user.AvatarURL, // Save the Avatar URL
-		},
-		Created_At: time.Now(),
-		Updated_At: time.Now(),
-	}
-	// Insert the new user into the database
-	_, err = config.UserCollection.InsertOne(ctx, newUser)
-	if err != nil {
-		utils.ErrorResponse(w, r, http.StatusBadRequest, "Failed To create User")
-		return
-	}
-
-	// Set tokens in cookies and redirect to the main page
-	// utils.SendTokenAndRedirect(newUser, w, r)
-	// // Send token to the new user
-	utils.SendToken(newUser, 201, fmt.Sprintf("Account created successfully. Welcome, %s!", newUser.FirstName), w, r)
-
+	// Redirect to the frontend
+	http.Redirect(w, r, "http://localhost:3000/login", http.StatusSeeOther)
 }
 
 func CreateUserFromSocalAuth(w http.ResponseWriter, r *http.Request) {
-
-	logrus.Info("Am getting Called =====>")
-
-	// Retrieve the session
 	session, err := gothic.Store.Get(r, "gothic-session")
 	if err != nil {
 		http.Error(w, "Failed to retrieve session", http.StatusInternalServerError)
 		return
 	}
-	logrus.Info(" Sesson log :", session)
 
-	// Get user data from the session
-	user, ok := session.Values["user"].(goth.User)
-	if !ok {
-		http.Error(w, "No user found in session", http.StatusUnauthorized)
+	// Retrieve user data from the session
+	userEmail, emailOk := session.Values["user_email"].(string)
+	userFirstName, firstNameOk := session.Values["user_first_name"].(string)
+	userLastName, lastNameOk := session.Values["user_last_name"].(string)
+	userName, nameOk := session.Values["user_name"].(string)
+	userAvatar, avatarOk := session.Values["user_avatar"].(string)
+
+	if !emailOk || !firstNameOk || !lastNameOk || !nameOk || !avatarOk {
+		http.Error(w, "Incomplete user data in session", http.StatusUnauthorized)
 		return
 	}
 
-	// At this point, you have the user data, proceed with token generation or user creation
-	logrus.Info("User from session:", user)
+	// Log the user data for debugging
+	logrus.Infof("User from session: %s %s (%s) - %s", userFirstName, userLastName, userName, userEmail)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 
 	var existingUser models.USER
-	err = config.UserCollection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&existingUser)
+	err = config.UserCollection.FindOne(ctx, bson.M{"email": userEmail}).Decode(&existingUser)
 
 	if err == nil {
-		// If user exists, set tokens and redirect
-		utils.SendToken(existingUser, 201, fmt.Sprintf("Account created successfully. Welcome, %s!", existingUser.FirstName), w, r)
+		// User exists, issue token
+		utils.SendToken(existingUser, 201, fmt.Sprintf("Account found. Welcome, %s!", existingUser.FirstName), w, r)
 	} else {
-		// If user does not exist, create a new user and redirect
+		// User doesn't exist, create a new user
 		newUser := models.USER{
-			UserName:  user.NickName,
-			Email:     user.Email,
-			FirstName: user.FirstName,
-			LastName:  user.LastName,
-			UserImage: models.UserImage{
-				PublicID: "",
-				URL:      user.AvatarURL,
-			},
+			Id:        primitive.NewObjectID(),
+			UserName:  userName,
+			Email:     userEmail,
+			FirstName: userFirstName,
+			LastName:  userLastName,
+			UserRole:  "user",
+			UserImage: models.UserImage{URL: userAvatar},
 		}
 
 		_, err = config.UserCollection.InsertOne(ctx, newUser)
@@ -437,10 +388,10 @@ func CreateUserFromSocalAuth(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Failed to create user", http.StatusBadRequest)
 			return
 		}
-		// Set tokens and redirect to main page
+
+		// Issue token for the new user
 		utils.SendToken(newUser, 201, fmt.Sprintf("Account created successfully. Welcome, %s!", newUser.FirstName), w, r)
 	}
-
 }
 
 // ========================

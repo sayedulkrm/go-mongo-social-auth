@@ -6,6 +6,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
+	"github.com/sayedulkrm/go-mongo-social-auth/helpers"
 	"github.com/sayedulkrm/go-mongo-social-auth/lib"
 	"github.com/sayedulkrm/go-mongo-social-auth/middlewares"
 	"github.com/sayedulkrm/go-mongo-social-auth/routes"
@@ -28,14 +29,16 @@ func main() {
 	root := routes.SetupRoutes()
 
 	corsOptions := cors.Options{
-		AllowedOrigins:   []string{"*"},
+		AllowedOrigins:   []string{"http://localhost:3000"}, // Explicitly allow your frontend's origin
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
-		// Debug:            true,
+		// debug
 	}
 
 	cors := cors.New(corsOptions)
+
+	helpers.SocialAuthHelper()
 
 	handler := cors.Handler(root)
 	errorHandler := middlewares.ErrorMiddleware(handler)
